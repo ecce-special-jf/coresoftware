@@ -15,7 +15,6 @@
 
 #include <Geant4/G4Box.hh>
 #include <Geant4/G4DisplacedSolid.hh>
-#include <Geant4/G4Exception.hh>  // for G4Exception
 #include <Geant4/G4ExceptionSeverity.hh>  // for FatalException
 #include <Geant4/G4LogicalVolume.hh>
 #include <Geant4/G4Material.hh>
@@ -28,6 +27,7 @@
 #include <Geant4/G4Trap.hh>
 #include <Geant4/G4Types.hh>  // for G4double
 #include <Geant4/G4Vector3D.hh>
+#include <Geant4/globals.hh>  // for G4Exception, G4ExceptionDe...
 
 #include <TSystem.h>
 
@@ -270,9 +270,9 @@ PHG4FullProjTiltedSpacalDetector::Construct_AzimuthalSeg()
       /*const G4String& pName*/ G4String(GetName() + string("_sec_trap")),
       enclosure_depth * 0.5,                                                                              // G4double pDz,
       center_tilt_angle, halfpi,                                                                          // G4double pTheta, G4double pPhi,
-      inner_half_width, get_geom_v3()->get_length() * cm / 2.0, get_geom_v3()->get_length() * cm / 2.0,   // G4double pDy1, G4double pDx1, G4double pDx2,
+      inner_half_width, (get_geom_v3()->get_length()+100) * cm / 2.0, (get_geom_v3()->get_length()+100) * cm / 2.0,   // G4double pDy1, G4double pDx1, G4double pDx2,
       0,                                                                                                  // G4double pAlp1,
-      outter_half_width, get_geom_v3()->get_length() * cm / 2.0, get_geom_v3()->get_length() * cm / 2.0,  // G4double pDy2, G4double pDx3, G4double pDx4,
+      outter_half_width, (get_geom_v3()->get_length()+100) * cm / 2.0, (get_geom_v3()->get_length()+100) * cm / 2.0,  // G4double pDy2, G4double pDx3, G4double pDx4,
       0                                                                                                   // G4double pAlp2 //
   );
   G4Transform3D sec_solid_transform =
@@ -327,9 +327,9 @@ PHG4FullProjTiltedSpacalDetector::Construct_AzimuthalSeg()
     typedef map<int, double> z_locations_t;
     z_locations_t z_locations;
     z_locations[000] = get_geom_v3()->get_sidewall_thickness() * cm / 2.0 + get_geom_v3()->get_assembly_spacing() * cm;
-    z_locations[001] = get_geom_v3()->get_length() * cm / 2.0 - (get_geom_v3()->get_sidewall_thickness() * cm / 2.0 + get_geom_v3()->get_assembly_spacing() * cm);
+    z_locations[001] = (get_geom_v3()->get_length()+100) * cm / 2.0 - (get_geom_v3()->get_sidewall_thickness() * cm / 2.0 + get_geom_v3()->get_assembly_spacing() * cm);
     z_locations[100] = -(get_geom_v3()->get_sidewall_thickness() * cm / 2.0 + get_geom_v3()->get_assembly_spacing() * cm);
-    z_locations[101] = -(get_geom_v3()->get_length() * cm / 2.0 - (get_geom_v3()->get_sidewall_thickness() * cm / 2.0 + get_geom_v3()->get_assembly_spacing() * cm));
+    z_locations[101] = -((get_geom_v3()->get_length()+100) * cm / 2.0 - (get_geom_v3()->get_sidewall_thickness() * cm / 2.0 + get_geom_v3()->get_assembly_spacing() * cm));
 
     BOOST_FOREACH (z_locations_t::value_type& val, z_locations)
     {
@@ -390,7 +390,7 @@ PHG4FullProjTiltedSpacalDetector::Construct_AzimuthalSeg()
       G4Box* wall_solid = new G4Box(G4String(GetName() + G4String("_SideWall_") + to_string(val.first)),
                                     get_geom_v3()->get_sidewall_thickness() * cm / 2.0,
                                     edge_half_depth,
-                                    (get_geom_v3()->get_length() / 2. - 2 * (get_geom_v3()->get_sidewall_thickness() + 2. * get_geom_v3()->get_assembly_spacing())) * cm * .5);
+                                    ((get_geom_v3()->get_length()+100) / 2. - 2 * (get_geom_v3()->get_sidewall_thickness() + 2. * get_geom_v3()->get_assembly_spacing())) * cm * .5);
 
       G4LogicalVolume* wall_logic = new G4LogicalVolume(wall_solid, wall_mat,
                                                         G4String(G4String(GetName() + G4String("_SideWall_") + to_string(val.first))), 0, 0,
@@ -544,11 +544,30 @@ int PHG4FullProjTiltedSpacalDetector::Construct_Fibers_SameLengthFiberPerTower(
   fiber_par_map fiber_par;
   G4double min_fiber_length = g_tower.pDz * cm * 4;
 
+  int maxNfibX =  g_tower.NFiberX;
+  int ixS = 0;
+  int maxNfibY =  g_tower.NFiberX;
+  int iyS = 0;
+
+
+  // const int block_map_id = (100 + side * (block_id + 1)) * 10 + block_sec;
+  if (g_tower.id / 10 < 77)
+    {
+      cout << "special --- " <<  g_tower.id / 10 << endl;
+      min_fiber_length = g_tower.pDz * cm * 4*0.9;
+      maxNfibX =0;
+      ixS = 4;
+      maxNfibY =0;
+      iyS = 4;
+    }
+  
+
   G4Vector3D v_zshift = G4Vector3D(tan(g_tower.pTheta) * cos(g_tower.pPhi),
                                    tan(g_tower.pTheta) * sin(g_tower.pPhi), 1) *
                         g_tower.pDz;
   //  int fiber_ID = 0;
-  for (int ix = 0; ix < g_tower.NFiberX; ix++)
+
+  for (int ix = ixS; ix < maxNfibX; ix++)
   //  int ix = 0;
   {
     const double weighted_ix = static_cast<double>(ix) / (g_tower.NFiberX - 1.);
@@ -559,7 +578,7 @@ int PHG4FullProjTiltedSpacalDetector::Construct_Fibers_SameLengthFiberPerTower(
     const double weighted_pDx3 = (g_tower.pDx3 - g_tower.ModuleSkinThickness - get_geom_v3()->get_fiber_outer_r()) * (weighted_ix * 2 - 1);
     const double weighted_pDx4 = (g_tower.pDx4 - g_tower.ModuleSkinThickness - get_geom_v3()->get_fiber_outer_r()) * (weighted_ix * 2 - 1);
 
-    for (int iy = 0; iy < g_tower.NFiberY; iy++)
+    for (int iy = iyS; iy < maxNfibY; iy++)
     //        int iy = 0;
     {
       if ((ix + iy) % 2 == 1)
@@ -677,7 +696,18 @@ int PHG4FullProjTiltedSpacalDetector::Construct_Fibers(
                                    tan(g_tower.pTheta) * sin(g_tower.pPhi), 1) *
                         g_tower.pDz;
   int fiber_cnt = 0;
-  for (int ix = 0; ix < g_tower.NFiberX; ix++)
+
+  if (g_tower.id / 10 < 77)
+    {
+      cout << "special --- " <<  g_tower.id / 10 << endl;
+    }
+  else if (g_tower.id/10 > 78 && g_tower.id/10 < 122)
+    {
+      return 0;
+
+    }
+
+  for (int ix = 0; ix < g_tower.NFiberX; ix=ix+8)
   {
     const double weighted_ix = static_cast<double>(ix) / (g_tower.NFiberX - 1.);
 
@@ -687,7 +717,7 @@ int PHG4FullProjTiltedSpacalDetector::Construct_Fibers(
     const double weighted_pDx3 = (g_tower.pDx3 - g_tower.ModuleSkinThickness - get_geom_v3()->get_fiber_outer_r()) * (weighted_ix * 2 - 1);
     const double weighted_pDx4 = (g_tower.pDx4 - g_tower.ModuleSkinThickness - get_geom_v3()->get_fiber_outer_r()) * (weighted_ix * 2 - 1);
 
-    for (int iy = 0; iy < g_tower.NFiberY; iy++)
+    for (int iy = 0; iy < g_tower.NFiberY; iy=iy+8)
     {
       if ((ix + iy) % 2 == 1)
         continue;  // make a triangle pattern
@@ -720,9 +750,14 @@ int PHG4FullProjTiltedSpacalDetector::Construct_Fibers(
       ss << "_y" << iy;
       G4LogicalVolume* fiber_logic = Construct_Fiber(fiber_length,
                                                      ss.str());
+      //    GetDisplayAction()->AddVolume(wall_logic, "Wall");
 
-      if (get_geom_v3()->get_construction_verbose() >= 3)
+      //
+      //      if (get_geom_v3()->get_construction_verbose() >= 3)
+      if (fiber_cnt % 100 == 0)
+	
         cout << "PHG4FullProjTiltedSpacalDetector::Construct_Fibers::" << GetName()
+	     << " g_tower.id " << g_tower.id << endl
              << " - constructed fiber " << fiber_ID << ss.str()  //
              << ", Length = " << fiber_length << "mm, "          //
              << "x = " << center_fiber.x() << "mm, "             //
@@ -775,8 +810,27 @@ PHG4FullProjTiltedSpacalDetector::Construct_Tower(
   std::stringstream sout;
   sout << "_" << g_tower.id;
   const G4String sTowerID(sout.str());
-
+  
   //Processed PostionSeeds 1 from 1 1
+  /*
+  if (g_tower.id < 80 || g_tower.id > 120)
+    {
+  cout  << "jf constr tower " << g_tower.id  <<" ******* " 
+	<< "g_tower.pDz "    << g_tower.pDz	 
+	<< "g_tower.pTheta " << g_tower.pTheta
+	<< "g_tower.pPhi	"   << g_tower.pPhi	 
+	<< "g_tower.pDy1	 "  << g_tower.pDy1	 
+	<< "g_tower.pDx1	  " << g_tower.pDx1	 
+	<< "g_tower.pDx2	   "<< g_tower.pDx2	 
+	<< "g_tower.pAlp1 "  << g_tower.pAlp1 
+	<< "g_tower.pDy2	"   << g_tower.pDy2	 
+	<< "g_tower.pDx3	 "  << g_tower.pDx3	 
+	<< "g_tower.pDx4	  " << g_tower.pDx4	 
+	<< "g_tower.pAlp2  " << g_tower.pAlp2 
+	<< endl;
+
+    }
+  */
 
   G4Trap* block_solid = new G4Trap(
       /*const G4String& pName*/ G4String(GetName()) + sTowerID,
@@ -812,7 +866,10 @@ PHG4FullProjTiltedSpacalDetector::Construct_Tower(
   }
   else if (get_geom_v3()->get_config() == SpacalGeom_t::kFullProjective_2DTaper_Tilted_SameLengthFiberPerTower)
   {
-    fiber_count = Construct_Fibers_SameLengthFiberPerTower(g_tower,
+    //    fiber_count = Construct_Fibers_SameLengthFiberPerTower(g_tower,
+    //                                                     block_logic);
+
+    fiber_count = Construct_Fibers(g_tower,
                                                            block_logic);
 
     if (get_geom_v3()->get_construction_verbose() >= 2)

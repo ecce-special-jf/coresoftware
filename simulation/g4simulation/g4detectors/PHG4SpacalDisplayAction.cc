@@ -67,8 +67,10 @@ void PHG4SpacalDisplayAction::ApplyDisplayAction(G4VPhysicalVolume *physvol)
     else if (it.second == "Fiber")
     {
       PHG4Utils::SetColour(visatt, "G4_POLYSTYRENE");
-      visatt->SetVisibility(m_Geom->is_virualize_fiber());
-      visatt->SetForceSolid(m_Geom->is_virualize_fiber());
+      //      visatt->SetVisibility(m_Geom->is_virualize_fiber());
+      //visatt->SetForceSolid(m_Geom->is_virualize_fiber());
+      visatt->SetVisibility(true);
+      visatt->SetForceSolid(true);
     }
     else if (it.second == "FiberCore")
     {

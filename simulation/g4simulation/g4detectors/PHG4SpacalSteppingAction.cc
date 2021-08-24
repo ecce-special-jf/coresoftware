@@ -157,15 +157,33 @@ bool PHG4SpacalSteppingAction::UserSteppingAction(const G4Step* aStep, bool)
         scint_id = prePoint->GetTouchable()->GetReplicaNumber(0);
     }
 
-    //       cout << "track id " << aTrack->GetTrackID() << endl;
-    //        cout << "time prepoint: " << prePoint->GetGlobalTime() << endl;
-    //        cout << "time postpoint: " << postPoint->GetGlobalTime() << endl;
+    //cout << "track id " << aTrack->GetTrackID() << endl;
+    //cout << "time prepoint: " << prePoint->GetGlobalTime() << endl;
+    //   cout << "time postpoint: " << postPoint->GetGlobalTime() << endl;
+
+    
+    //    if (prePoint->GetPosition().z() / cm > get_zmax()- 20 || prePoint->GetPosition().z() / cm < get_zmin()+20)
+    
+    if (prePoint->GetPosition().z() / cm > 190 || prePoint->GetPosition().z() / cm < -190)
+      {
+
+	cout << "JJJ high z hit : " << prePoint->GetPosition().z() << "  " << isactive << " <-- isactive: (cor,cla,sup,abs" << PHG4SpacalDetector::FIBER_CORE << " " << PHG4SpacalDetector::FIBER_CLADING << " " << PHG4SpacalDetector::SUPPORT << " " << PHG4SpacalDetector::ABSORBER << endl; 
+
+      //      return false;
+	return false;
+      }
+        
     switch (prePoint->GetStepStatus())
     {
     case fGeomBoundary:
     case fUndefined:
       // if previous hit was saved, hit pointer was set to nullptr
       // and we have to make a new one
+      /*
+      cout << "hit undefined"  << prePoint->GetPosition().x() << " "
+	   << prePoint->GetPosition().y() << " " 
+	   << prePoint->GetPosition().z() << " " << endl;
+      */
       if (!hit)
       {
         hit = new PHG4Hitv1();

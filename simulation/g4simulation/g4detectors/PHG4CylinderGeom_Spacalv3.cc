@@ -126,12 +126,18 @@ PHG4CylinderGeom_Spacalv3::ImportParameters(const PHParameters & param)
   if (param.exist_double_param("divider_width"))
     divider_width = param.get_double_param("divider_width");
 
+
+  set_zmin(-200);
+  set_zmax(200);
+  //  length = 400;
+
   // load sector_tower_map
   if (param.exist_int_param("sector_tower_map_size"))
     {
       sector_tower_map.clear();
 
-      const int n = param.get_int_param("sector_tower_map_size");
+      //const int n = param.get_int_param("sector_tower_map_size");
+      const int n = 208;
 
       for (int i = 0; i < n; i++)
         {

@@ -135,6 +135,7 @@ void PHG4SpacalDetector::ConstructMe(G4LogicalVolume *logicWorld)
     Print();
   }
 
+  /*
   if ((_geom->get_zmin() * cm + _geom->get_zmax() * cm) / 2 != _geom->get_zpos() * cm)
   {
     cout
@@ -143,6 +144,8 @@ void PHG4SpacalDetector::ConstructMe(G4LogicalVolume *logicWorld)
     _geom->Print();
     gSystem->Exit(-1);
   }
+  */
+
   if (_geom->get_zmin() * cm >= _geom->get_zmax() * cm)
   {
     cout << "PHG4SpacalDetector::Construct - ERROR - zmin >= zmax!" << endl;
@@ -152,7 +155,7 @@ void PHG4SpacalDetector::ConstructMe(G4LogicalVolume *logicWorld)
 
   G4Tubs *_cylinder_solid = new G4Tubs(G4String(GetName()),
                                        _geom->get_radius() * cm, _geom->get_max_radius() * cm,
-                                       _geom->get_length() * cm / 2.0, 0, twopi);
+                                       (_geom->get_length()) * cm / 2.0, 0, twopi);
 
   cylinder_solid = _cylinder_solid;
 
@@ -165,7 +168,7 @@ void PHG4SpacalDetector::ConstructMe(G4LogicalVolume *logicWorld)
 
   cylinder_physi = new G4PVPlacement(0,
                                      G4ThreeVector(_geom->get_xpos() * cm, _geom->get_ypos() * cm,
-                                                   _geom->get_zpos() * cm),
+                                                   (_geom->get_zpos()) * cm),
                                      cylinder_logic, G4String(GetName()),
                                      logicWorld, false, 0, OverlapCheck());
 
@@ -192,6 +195,8 @@ void PHG4SpacalDetector::ConstructMe(G4LogicalVolume *logicWorld)
 
     stringstream name;
     name << GetName() << "_sec" << sec;
+
+    cout << GetName() <<  "  " << sec  << " jf " << rot << endl;
 
     G4PVPlacement *calo_phys = new G4PVPlacement(sec_place, sec_logic,
                                                  G4String(name.str()), cylinder_logic, false, sec,
